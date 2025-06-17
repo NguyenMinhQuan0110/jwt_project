@@ -26,6 +26,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll() // cho phép register/login không cần token
+                .requestMatchers("/api/admin/**").hasRole("admin")//chỉ cho phep những ai là admin
                 .anyRequest().authenticated() // các request khác cần token
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

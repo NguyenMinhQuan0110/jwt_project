@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 //@RestControllerAdvice = @ControllerAdvice(Đánh dấu lớp này là nơi xử lý lỗi toàn cục) + @ResponseBody(Tự động trả JSON khi có lỗi.)
-//Nếu chỉ dùng @ControllerAdvice thì bạn phải viết thêm @ResponseBody trong mỗi method
+//Nếu chỉ dùng @ControllerAdvice thì phải viết thêm @ResponseBody trong mỗi method
 public class GlobalExceptionHandler {
 	
 	 // Bắt lỗi Validation
@@ -37,7 +38,16 @@ public class GlobalExceptionHandler {
                 ex.getMessage(), List.of());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
     }
-
+    //bắt lỗi BadRequestException
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequestException(BadRequestException ex) {
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                List.of()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+    }
     // Bắt lỗi khác
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleOtherExceptions(Exception ex) {

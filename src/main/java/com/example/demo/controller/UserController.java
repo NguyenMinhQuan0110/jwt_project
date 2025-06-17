@@ -15,6 +15,8 @@ import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.service.UserService;
 
+import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,11 +25,6 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 	
-//	@PostMapping
-//	public UserResponse createUser(@Valid @RequestBody UserRequest userRequest) {
-//		return userService.createUser(userRequest);
-//	}
-//	
 	@GetMapping
 	public List<UserResponse> getAllUser(){
 		return userService.getAllUser();
@@ -38,13 +35,13 @@ public class UserController {
 		return userService.getUserById(id);
 	}
 	
-	@PutMapping("/{id}")
-	public UserResponse updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest) {
+	@PutMapping("/update/{id}")
+	public UserResponse updateUser(@PathVariable Long id,@Valid @RequestBody UserRequest userRequest) {
 		return userService.updateUser(id, userRequest);
 	}
 	
-	@DeleteMapping("/{id}")
-	public String deletUser(@PathVariable Long id) {
+	@DeleteMapping("/delete/{id}")
+	public String deleteUser(@PathVariable Long id) {
 		userService.deleteUser(id);
 		return "User deleted successfully";
 	}

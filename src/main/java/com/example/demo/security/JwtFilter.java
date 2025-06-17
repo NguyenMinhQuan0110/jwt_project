@@ -1,9 +1,12 @@
 package com.example.demo.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -36,16 +39,17 @@ public class JwtFilter extends OncePerRequestFilter{
 
 	        if (authHeader != null && authHeader.startsWith("Bearer ")) {
 	            token = authHeader.substring(7);
-	            email = jwtUtil.extractUsername(token);
+	            email = jwtUtil.extractEmail(token);
 	        }
 
 	        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 	            User user = userRepository.findByEmail(email).orElse(null);
 
 	            if (user != null && jwtUtil.validateToken(token, user.getEmail())) {
+	            	List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
 	                UsernamePasswordAuthenticationToken authToken = 
 	                    new UsernamePasswordAuthenticationToken(
-	                        user, null, null
+	                        user, null, authorities
 	                    );
 	                authToken.setDetails(
 	                    new WebAuthenticationDetailsSource().buildDetails(request)

@@ -9,28 +9,34 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 
 @Component
 public class JwtUtil {
-	private final String SECRET_KEY = "my-super-secret-key-which-is-very-strong-123456"; // đổi key dài tí
-    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 1 ngày(đơn vị là 1/1000 giây) 
+	
+	@Value("${jwt.secret}")
+	private String SECRET_KEY;
+	
+	@Value("${jwt.expiration}")
+    private long EXPIRATION_TIME;
 
     private Key getSignKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
     // Tạo token
-    public String generateToken(String username) {
+    public String generateToken(String email,String role) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(email)
+                .claim("role",role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Lấy username từ token
-    public String extractUsername(String token) {
+    // Lấy email từ token
+    public String extractEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSignKey())
                 .build()
@@ -51,13 +57,8 @@ public class JwtUtil {
             return false;
         }
     }
-//phương thức này sai
-//    public boolean validateToken(String token, String email) {
-//        final String username = extractUsername(token);
-//        return (username.equals(email) && !isTokenValid(token));
-//    }
     public boolean validateToken(String token, String email) {
-        final String username = extractUsername(token);
+        final String username = extractEmail(token);
         return (username.equals(email) && isTokenValid(token));
     }
     
