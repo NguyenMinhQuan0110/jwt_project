@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import com.example.demo.model.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,9 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//lớp này để trả data về client
-public class UserResponse {
+public class UserResponseForAdmin {
 	private Long id;
     private String name;
     private String email;
+    private Role role;
 }

@@ -25,8 +25,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // cho phép register/login không cần token
+                .requestMatchers("/api/auth/register").permitAll() // cho phép register/login không cần token
+                .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/getuserbytoken").authenticated()
+                .requestMatchers("/api/auth/refresh-token").authenticated()
+                .requestMatchers("/api/auth/logout").authenticated()
+                .requestMatchers("/api/auth/users/**").authenticated()
                 .requestMatchers("/api/admin/**").hasRole("admin")//chỉ cho phep những ai là admin
+                
                 .anyRequest().authenticated() // các request khác cần token
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
