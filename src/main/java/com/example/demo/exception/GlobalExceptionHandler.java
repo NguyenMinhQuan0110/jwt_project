@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
     }
 
-    // Bắt lỗi NotFoundException
+    // Bắt lỗi NotFoundException(404)
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiError> handleNotFoundException(NotFoundException ex) {
         ApiError apiError = new ApiError(HttpStatus.NOT_FOUND.value(),
@@ -47,6 +47,16 @@ public class GlobalExceptionHandler {
                 List.of()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+    }
+ // Bắt lỗi ForbiddenException(403)
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbiddenException(ForbiddenException ex) {
+        ApiError apiError = new ApiError(
+            HttpStatus.FORBIDDEN.value(),
+            ex.getMessage(),
+            List.of()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiError);
     }
     // Bắt lỗi khác
     @ExceptionHandler(Exception.class)

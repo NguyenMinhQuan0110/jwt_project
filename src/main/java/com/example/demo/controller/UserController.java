@@ -18,7 +18,6 @@ import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserResponseForAdmin;
 import com.example.demo.service.UserService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 
@@ -30,7 +29,7 @@ public class UserController {
 	private UserService userService;
 	
 	@GetMapping
-	public List<UserResponse> getAllUser(){
+	public List<UserResponseForAdmin> getAllUser(){
 		return userService.getAllUser();
 	}
 	
@@ -39,18 +38,18 @@ public class UserController {
 		return userService.getUserById(id);
 	}
 	
-	@PutMapping("/update/{id}")
-	public UserResponse updateUser(@PathVariable Long id,@Valid @RequestBody UserRequest userRequest) {
-		return userService.update(id, userRequest);
+	@PutMapping("/update")
+	public UserResponse adminUpdate(@Valid @RequestBody UserRequest userRequest) {
+		return userService.userUpdate(userRequest);
 	}
 	
-	@PutMapping("/updaterole/{id}")
-	public UserResponseForAdmin updateRole(@PathVariable Long id,@Valid @RequestBody UserRequestForAdmin request) {
-		return userService.updateRole(id, request);
+	@PutMapping("/updaterole")
+	public UserResponseForAdmin adminUpdate(@Valid @RequestBody UserRequestForAdmin request) {
+		return userService.adminUpdate(request);
 	}
 	
 	@DeleteMapping("/delete/{id}")
-	public String deleteUser(@PathVariable Long id,HttpServletRequest request) {
+	public String deleteUser(@PathVariable Long id) {
 		userService.deleteUser(id);
 		return "User deleted successfully";
 	}

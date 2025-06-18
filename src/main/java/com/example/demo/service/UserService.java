@@ -15,6 +15,7 @@ import com.example.demo.dto.UserRequestForAdmin;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserResponseForAdmin;
 import com.example.demo.exception.BadRequestException;
+import com.example.demo.exception.ForbiddenException;
 import com.example.demo.exception.NotFoundException;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
@@ -36,8 +37,16 @@ public class UserService {
 	@Autowired
     private PasswordEncoder passwordEncoder;
 	
-	public List<UserResponse> getAllUser(){
-		return userRepository.findAll().stream().map(u-> new UserResponse(u.getId(),u.getName(),u.getEmail())).collect(Collectors.toList());
+	public List<UserResponseForAdmin> getAllUser(){
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+	    boolean isAdmin = auth.getAuthorities().stream()
+	        .anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
+
+	    if (!isAdmin) {
+	        throw new ForbiddenException("USER_NOT_PERMISSION");
+	    }
+		return userRepository.findAll().stream().map(u-> new UserResponseForAdmin(u.getId(),u.getName(),u.getEmail(),u.getRole().getName())).collect(Collectors.toList());
 	}
 	
 	@Transactional
@@ -61,25 +70,35 @@ public class UserService {
 		return new UserResponse(user.getId(),user.getName(),user.getEmail());
 	}
 	@Transactional
-	public UserResponse update(Long id, UserRequest userRequest) {
-		User user = userRepository.findById(id).orElseThrow(()-> new NotFoundException("User not found"));
+	public UserResponse userUpdate( UserRequest userRequest) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+
+        User userUpdate = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+		User user = userRepository.findById(userRequest.getId()).orElseThrow(()-> new NotFoundException("User not found"));
+		if(user.getId()!=userUpdate.getId()) {
+			throw new ForbiddenException("USER_NOT_PERMISSION");
+		}
 		user.setName(userRequest.getName());
 		user.setEmail(userRequest.getEmail());
 		user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 		user = userRepository.save(user);
 		return new UserResponse(user.getId(),user.getName(),user.getEmail());
 	}
-	public UserResponseForAdmin updateRole(Long id, UserRequestForAdmin userRequestForAdmin) {
+	@Transactional
+	public UserResponseForAdmin adminUpdate( UserRequestForAdmin userRequestForAdmin) {
 	    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 	    boolean isAdmin = auth.getAuthorities().stream()
 	        .anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
 
 	    if (!isAdmin) {
-	        throw new BadRequestException("USER_NOT_PERMISSION");
+	        throw new ForbiddenException("USER_NOT_PERMISSION");
 	    }
 		
-		User user = userRepository.findById(id).orElseThrow(()-> new NotFoundException("User not found"));
+		User user = userRepository.findById(userRequestForAdmin.getId()).orElseThrow(()-> new NotFoundException("User not found"));
 		user.setName(userRequestForAdmin.getName());
 		user.setEmail(userRequestForAdmin.getEmail());
 		Role roleId = roleRepository.findByName(userRequestForAdmin.getRole()).orElseThrow(() -> new NotFoundException("Role 'user' not found"));
@@ -87,10 +106,21 @@ public class UserService {
 		user.setPassword(passwordEncoder.encode(userRequestForAdmin.getPassword()));
 		
 		user = userRepository.save(user);
-		return new UserResponseForAdmin(user.getId(),user.getName(),user.getEmail(),user.getRole());
+		return new UserResponseForAdmin(user.getId(),user.getName(),user.getEmail(),user.getRole().getName());
 	}
 	@Transactional
 	public void deleteUser(Long id) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+	    boolean isAdmin = auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
+        String email = auth.getName();
+
+        User userDelete = userRepository.findByEmail(email).orElseThrow(() -> new NotFoundException("User not found"));
+
+		User user = userRepository.findById(id).orElseThrow(()-> new NotFoundException("User not found"));
+		 if(!isAdmin && userDelete.getId()!=id) {
+	        	throw new ForbiddenException("USER_NOT_PERMISSION");
+	        }
 		userRepository.deleteById(id);
 	}
 }
