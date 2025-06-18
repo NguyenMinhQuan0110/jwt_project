@@ -27,14 +27,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register").permitAll() // cho phép register/login không cần token
                 .requestMatchers("/api/auth/login").permitAll()
-                .requestMatchers("/api/auth/getuserbytoken").authenticated()
-                .requestMatchers("/api/auth/refresh-token").authenticated()
-                .requestMatchers("/api/auth/logout").authenticated()
-                .requestMatchers("/api/auth/users/**").authenticated()
-                .requestMatchers("/api/admin/**").hasRole("admin")//chỉ cho phep những ai là admin
-                
                 .anyRequest().authenticated() // các request khác cần token
-            )
+            ) 
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

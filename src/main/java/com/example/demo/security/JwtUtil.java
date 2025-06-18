@@ -5,6 +5,8 @@ import java.util.Date;
 
 import org.springframework.stereotype.Component;
 
+import com.example.demo.model.User;
+
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -25,10 +27,11 @@ public class JwtUtil {
     }
 
     // Tạo token
-    public String generateToken(String email,String role) {
+    public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(email)
-                .claim("role",role)
+                .setSubject(user.getEmail())
+                .claim("name", user.getName())
+                .claim("role",user.getRole().getName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
@@ -44,6 +47,15 @@ public class JwtUtil {
                 .getBody()
                 .getSubject();
     }
+ // Lấy role từ token
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
 
     // Kiểm tra token hợp lệ
     public boolean isTokenValid(String token) {
@@ -58,8 +70,8 @@ public class JwtUtil {
         }
     }
     public boolean validateToken(String token, String email) {
-        final String username = extractEmail(token);
-        return (username.equals(email) && isTokenValid(token));
+        final String emailOfUser = extractEmail(token);
+        return (emailOfUser.equals(email) && isTokenValid(token));
     }
     
 }

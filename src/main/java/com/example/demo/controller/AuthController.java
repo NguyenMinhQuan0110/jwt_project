@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +45,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public UserResponse register(@Valid @RequestBody UserRequest request) {
-    	return userService.createUser(request);
+    	return userService.create(request);
     }
 
     @PostMapping("/login")
@@ -53,7 +55,7 @@ public class AuthController {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
-        String token = jwtUtil.generateToken(user.getEmail(),user.getRole().getName());
+        String token = jwtUtil.generateToken(user);
         String refreshToken = UUID.randomUUID().toString();
         user.setRefreshToken(refreshToken);
         user.setRefreshTokenExpiry(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION));
@@ -63,13 +65,8 @@ public class AuthController {
     //lấy thông tin user từ token
     @GetMapping("/getuserbytoken")
     public UserResponse getUserByToken(HttpServletRequest request) {
-    	String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new BadRequestException("Token không hợp lệ");
-        }
-
-        String token = authHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
+    	 Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    	 String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -91,7 +88,7 @@ public class AuthController {
         }
 
         // Sinh access token mới
-        String newAccessToken = jwtUtil.generateToken(user.getEmail(), user.getRole().getName());
+        String newAccessToken = jwtUtil.generateToken(user);
 
         return new AuthResponse(newAccessToken, user.getRefreshToken());
     }
@@ -99,13 +96,8 @@ public class AuthController {
     //logout
     @PostMapping("/logout")
     public LogoutResponse logout(HttpServletRequest request) {
-        // Lấy email từ token trong header Authorization
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new BadRequestException("Token không hợp lệ");
-        }
-        String token = authHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
+    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
