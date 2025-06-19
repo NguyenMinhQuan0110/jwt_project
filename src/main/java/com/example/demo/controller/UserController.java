@@ -1,9 +1,12 @@
 package com.example.demo.controller;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,32 +33,41 @@ public class UserController {
 	private UserService userService;
 	
 	@GetMapping
-	public List<UserResponseForAdmin> getAllUser(){
-		return userService.getAllUser();
-	}
-	
-	@GetMapping("/{id}")
-	public UserResponse getUserById(@PathVariable Long id) {
-		return userService.getUserById(id);
-	}
-	
-	@PutMapping("/update")
-	public UserResponse adminUpdate(@Valid @RequestBody UserRequest userRequest) {
-		return userService.userUpdate(userRequest);
-	}
-	
-	@PutMapping("/updaterole")
-	public UserResponseForAdmin adminUpdate(@Valid @RequestBody UserRequestForAdmin request) {
-		return userService.adminUpdate(request);
-	}
-	@PutMapping("/setpassword")
-	public String setPassword(@RequestBody PasswordRequest passwordRequest) {
-		return userService.setPasswordForUser(passwordRequest);
-	}
-	
-	@DeleteMapping("/delete/{id}")
-	public String deleteUser(@PathVariable Long id) {
-		userService.deleteUser(id);
-		return "User deleted successfully";
-	}
+    public ResponseEntity<List<UserResponseForAdmin>> getAllUser() {
+        List<UserResponseForAdmin> users = userService.getAllUser();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        UserResponse user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<UserResponse> userUpdate(@Valid @RequestBody UserRequest userRequest) {
+        UserResponse updatedUser = userService.userUpdate(userRequest);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PutMapping("/updaterole")
+    public ResponseEntity<UserResponseForAdmin> adminUpdate(@Valid @RequestBody UserRequestForAdmin request) {
+        UserResponseForAdmin updatedUser = userService.adminUpdate(request);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    @PutMapping("/setpassword")
+    public ResponseEntity<Map<String, Object>> setPassword(@Valid @RequestBody PasswordRequest passwordRequest) {
+        Map<String, Object> result = userService.setPasswordForUser(passwordRequest);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", 200);
+        response.put("message", "User deleted successfully");
+        return ResponseEntity.ok(response);
+    }
 }

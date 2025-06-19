@@ -2,7 +2,9 @@ package com.example.demo.service;
 
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,7 +112,7 @@ public class UserService {
 		return new UserResponseForAdmin(user.getId(),user.getName(),user.getEmail(),user.getRole().getName());
 	}
 	@Transactional
-	public String setPasswordForUser(PasswordRequest passwordRequest) {
+	public Map<String, Object> setPasswordForUser(PasswordRequest passwordRequest) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 	    boolean isAdmin = auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
@@ -125,11 +127,17 @@ public class UserService {
 		 if (!passwordEncoder.matches(passwordRequest.getOldpassword(), user.getPassword())) {
 	            throw new AppException(400,"Wrong password");
 	        }
+		 if(passwordRequest.getOldpassword().equals(passwordRequest.getNewpassword())) {
+			 throw new AppException(400,"New password must be different from old password");
+		 }
 		 user.setPassword(passwordEncoder.encode(passwordRequest.getNewpassword()));
 		 user.setRefreshToken(null);
 	     user.setRefreshTokenExpiry(null);
 		 user=userRepository.save(user);
-		 return "Đổi mất khẩu thành công";
+		 Map<String, Object> response = new HashMap<>();
+		 response.put("status", 200);
+		 response.put("message", "Đổi mật khẩu thành công");
+		 return response;
 	}
 	
 	@Transactional
@@ -142,9 +150,13 @@ public class UserService {
         User userDelete = userRepository.findByEmail(email).orElseThrow(() -> new AppException(404,"User not found"));
 
 		User user = userRepository.findById(id).orElseThrow(()-> new AppException(404,"User not found"));
-		 if(!isAdmin && userDelete.getId()!=user.getId()) {
-	        	throw new AppException(403,"USER_NOT_PERMISSION");
-	        }
-		userRepository.deleteById(id);
+		if(isAdmin) {
+			if(userDelete.getId().equals(user.getId())) {
+				throw new AppException(403,"You can not delete yourself");
+			}
+			userRepository.deleteById(id);
+		}else {
+			throw new AppException(403,"USER_NOT_PERMISSION");
+		}
 	}
 }
