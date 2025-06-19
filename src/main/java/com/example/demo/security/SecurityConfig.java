@@ -17,6 +17,10 @@ public class SecurityConfig {
 	
 	@Autowired
     private JwtFilter jwtFilter;
+	
+	@Autowired
+	private AuthEntryPointJwt authEntryPointJwt;//xử lý lối liên quan đến jwt
+	
 	@Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -30,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/refresh-token").permitAll()
                 .anyRequest().authenticated() // các request khác cần token
             ) 
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(authEntryPointJwt))//gắn EntryPoint
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

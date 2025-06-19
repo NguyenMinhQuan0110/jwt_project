@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.PasswordRequest;
 import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserRequestForAdmin;
 import com.example.demo.dto.UserResponse;
@@ -46,6 +47,10 @@ public class UserController {
 	@PutMapping("/updaterole")
 	public UserResponseForAdmin adminUpdate(@Valid @RequestBody UserRequestForAdmin request) {
 		return userService.adminUpdate(request);
+	}
+	@PutMapping("/setpassword")
+	public String setPassword(@RequestBody PasswordRequest passwordRequest) {
+		return userService.setPasswordForUser(passwordRequest);
 	}
 	
 	@DeleteMapping("/delete/{id}")

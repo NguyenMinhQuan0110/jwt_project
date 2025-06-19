@@ -10,6 +10,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.example.demo.dto.PasswordRequest;
 import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserRequestForAdmin;
 import com.example.demo.dto.UserResponse;
@@ -74,14 +76,15 @@ public class UserService {
 
         User userUpdate = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(404,"User not found"));
+        boolean isAdmin = auth.getAuthorities().stream()
+    	        .anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
 
 		User user = userRepository.findById(userRequest.getId()).orElseThrow(()-> new AppException(404,"User not found"));
-		if(user.getId()!=userUpdate.getId()) {
+		if(!isAdmin &&user.getId()!=userUpdate.getId()) {
 			throw new AppException(403,"USER_NOT_PERMISSION");
 		}
 		user.setName(userRequest.getName());
 		user.setEmail(userRequest.getEmail());
-		user.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 		user = userRepository.save(user);
 		return new UserResponse(user.getId(),user.getName(),user.getEmail());
 	}
@@ -106,6 +109,29 @@ public class UserService {
 		user = userRepository.save(user);
 		return new UserResponseForAdmin(user.getId(),user.getName(),user.getEmail(),user.getRole().getName());
 	}
+	@Transactional
+	public String setPasswordForUser(PasswordRequest passwordRequest) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+	    boolean isAdmin = auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
+        String email = auth.getName();
+
+        User userSetPassWord = userRepository.findByEmail(email).orElseThrow(() -> new AppException(404,"User not found"));
+
+		User user = userRepository.findById(passwordRequest.getId()).orElseThrow(()-> new AppException(404,"User not found"));
+		 if(!isAdmin && userSetPassWord.getId()!=user.getId()) {
+	        	throw new AppException(403,"USER_NOT_PERMISSION");
+	        }
+		 if (!passwordEncoder.matches(passwordRequest.getOldpassword(), user.getPassword())) {
+	            throw new AppException(400,"Wrong password");
+	        }
+		 user.setPassword(passwordEncoder.encode(passwordRequest.getNewpassword()));
+		 user.setRefreshToken(null);
+	     user.setRefreshTokenExpiry(null);
+		 user=userRepository.save(user);
+		 return "Đổi mất khẩu thành công";
+	}
+	
 	@Transactional
 	public void deleteUser(Long id) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();

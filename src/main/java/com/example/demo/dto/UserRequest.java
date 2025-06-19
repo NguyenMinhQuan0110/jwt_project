@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 //lớp này để nhận data từ client
 public class UserRequest {
-	@NotNull(message = "Id is required")
 	private Long id;	
 	
 	 @NotBlank(message = "Name is required")

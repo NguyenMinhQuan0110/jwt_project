@@ -9,7 +9,6 @@ import lombok.Data;
 @Data
 public class UserRequestForAdmin {
 	
-	@NotNull(message = "Id is required")
 	private Long id;
 	
 	 @NotBlank(message = "Name is required")

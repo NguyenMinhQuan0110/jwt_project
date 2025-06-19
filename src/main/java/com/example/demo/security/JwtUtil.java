@@ -56,7 +56,6 @@ public class JwtUtil {
                 .getBody()
                 .get("role", String.class);
     }
-
     // Kiểm tra token hợp lệ
     public boolean isTokenValid(String token) {
         try {
