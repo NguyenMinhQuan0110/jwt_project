@@ -18,9 +18,7 @@ import com.example.demo.dto.LogoutResponse;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserResponse;
-import com.example.demo.exception.BadRequestException;
-import com.example.demo.exception.GlobalExceptionHandler;
-import com.example.demo.exception.NotFoundException;
+import com.example.demo.exception.AppException;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
@@ -37,7 +35,6 @@ public class AuthController {
 	@Value("${jwt.refreshTokenExpiration}")
 	private long REFRESH_TOKEN_EXPIRATION;
 	private final UserService userService;
-    private final GlobalExceptionHandler globalExceptionHandler;
 	private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
@@ -50,9 +47,9 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login( @RequestBody UserRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new NotFoundException("Email not found"));
+                .orElseThrow(() -> new AppException(404,"Email not found"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Wrong password");
+            throw new AppException(400,"Wrong password");
         }
         String token = jwtUtil.generateToken(user);
         String refreshToken = UUID.randomUUID().toString();
@@ -68,7 +65,7 @@ public class AuthController {
     	 String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new AppException(404,"Email not found"));
 
         return new UserResponse(user.getId(), user.getName(), user.getEmail());
     }
@@ -79,11 +76,11 @@ public class AuthController {
         User user = userRepository.findAll().stream()
             .filter(u -> refreshTokenRequest.getRefreshToken().equals(u.getRefreshToken()))
             .findFirst()
-            .orElseThrow(() -> new BadRequestException("Invalid refresh token"));
+            .orElseThrow(() -> new AppException(400,"Invalid refresh token"));
         
         // Kiểm tra hạn dùng
         if (user.getRefreshTokenExpiry().before(new Date())) {
-            throw new BadRequestException("Refresh token expired");
+            throw new AppException(400,"Refresh token expired");
         }
 
         // Sinh access token mới
@@ -99,7 +96,7 @@ public class AuthController {
         String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new AppException(404,"User not found"));
 
         // Xóa refresh token & expiry
         user.setRefreshToken(null);
