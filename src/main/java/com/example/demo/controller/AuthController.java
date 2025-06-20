@@ -1,21 +1,26 @@
 package com.example.demo.controller;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.AuthResponse;
+import com.example.demo.dto.ForgetPasswordRequest;
 import com.example.demo.dto.LogoutResponse;
 import com.example.demo.dto.RefreshTokenRequest;
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.exception.AppException;
@@ -40,8 +45,9 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public UserResponse register(@Valid @RequestBody UserRequest request) {
-    	return userService.create(request);
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) {
+    	Map<String, Object> result = userService.create(request);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/login")
@@ -49,12 +55,21 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(404,"Email not found"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        	user.setLoginfail(user.getLoginfail()+1);
+        	userRepository.save(user);
             throw new AppException(400,"Wrong password");
+        }
+        if(user.getBlock()==true) {
+        	throw new AppException(400,"Your account has been blocked, reason: "+ user.getReason());
+        }
+        if(user.getLoginfail()>5) {
+        	throw new AppException(400,"Your account has been locked, reason: Login wrong more than 5 times");
         }
         String token = jwtUtil.generateToken(user);
         String refreshToken = UUID.randomUUID().toString();
         user.setRefreshToken(refreshToken);
         user.setRefreshTokenExpiry(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION));
+        user.setLoginfail(0);
         userRepository.save(user);
         return new AuthResponse(token,refreshToken);
     }
@@ -87,6 +102,12 @@ public class AuthController {
         String newAccessToken = jwtUtil.generateToken(user);
 
         return new AuthResponse(newAccessToken, user.getRefreshToken());
+    }
+    
+    @PutMapping("/forgetpassword")
+    public ResponseEntity<Map<String, Object>> forgetPassword(@Valid @RequestBody ForgetPasswordRequest request) {
+        Map<String, Object> result = userService.forgetPassword(request);
+        return ResponseEntity.ok(result);
     }
     
     //logout

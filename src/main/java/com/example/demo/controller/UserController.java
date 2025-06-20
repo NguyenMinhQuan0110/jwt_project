@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.PasswordRequest;
+import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserRequestForAdmin;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserResponseForAdmin;
@@ -43,13 +44,13 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @PutMapping("/update")
+    @PutMapping("/userupdate")
     public ResponseEntity<UserResponse> userUpdate(@Valid @RequestBody UserRequestForAdmin userRequest) {
         UserResponse updatedUser = userService.userUpdate(userRequest);
         return ResponseEntity.ok(updatedUser);
     }
 
-    @PutMapping("/updaterole")
+    @PutMapping("/adminupdate")
     public ResponseEntity<UserResponseForAdmin> adminUpdate(@Valid @RequestBody UserRequestForAdmin request) {
         UserResponseForAdmin updatedUser = userService.adminUpdate(request);
         return ResponseEntity.ok(updatedUser);
@@ -60,7 +61,6 @@ public class UserController {
         Map<String, Object> result = userService.setPasswordForUser(passwordRequest);
         return ResponseEntity.ok(result);
     }
-
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);

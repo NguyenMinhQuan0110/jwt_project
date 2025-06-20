@@ -13,4 +13,6 @@ public class UserResponseForAdmin {
     private String name;
     private String email;
     private String role;
+    private Boolean block;
+    private String reason;
 }

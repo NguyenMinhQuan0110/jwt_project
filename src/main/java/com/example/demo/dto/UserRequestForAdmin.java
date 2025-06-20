@@ -28,4 +28,6 @@ public class UserRequestForAdmin {
 	 
 	 @NotBlank(message = "Role is required")
 	 private String role;
+	 private Boolean block;
+	 private String reason;
 }

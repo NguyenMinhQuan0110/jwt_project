@@ -34,5 +34,12 @@ public class User {
 	 
 	 private String refreshToken;
 	 
-	 private Date refreshTokenExpiry; 
+	 private Date refreshTokenExpiry;
+	 
+	 private Boolean block;
+	 
+	 private String reason;
+	 
+	 private Integer loginfail;
+	 
 }

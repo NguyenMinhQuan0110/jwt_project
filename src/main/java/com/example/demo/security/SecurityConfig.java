@@ -31,6 +31,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register").permitAll() // cho phép register/login không cần token
                 .requestMatchers("/api/auth/login").permitAll()
+                .requestMatchers("/api/auth/forgetpassword").permitAll()
                 .requestMatchers("/api/auth/refresh-token").permitAll()
                 .anyRequest().authenticated() // các request khác cần token
             ) 
