@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.PasswordRequest;
-import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserRequestForAdmin;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserResponseForAdmin;
@@ -45,7 +44,7 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<UserResponse> userUpdate(@Valid @RequestBody UserRequest userRequest) {
+    public ResponseEntity<UserResponse> userUpdate(@Valid @RequestBody UserRequestForAdmin userRequest) {
         UserResponse updatedUser = userService.userUpdate(userRequest);
         return ResponseEntity.ok(updatedUser);
     }

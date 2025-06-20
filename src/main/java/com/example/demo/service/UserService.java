@@ -46,7 +46,7 @@ public class UserService {
 	        .anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
 
 	    if (!isAdmin) {
-	        throw new AppException(403,"USER_NOT_PERMISSION");
+	        throw new AppException(403,"User ");
 	    }
 		return userRepository.findAll().stream().map(u-> new UserResponseForAdmin(u.getId(),u.getName(),u.getEmail(),u.getRole().getName())).collect(Collectors.toList());
 	}
@@ -56,7 +56,7 @@ public class UserService {
 		Role roleId = roleRepository.findByName("user").orElseThrow(() -> new AppException(404,"Role 'user' not found"));
 
 		    if (userRepository.existsByEmail(userRequest.getEmail())) {
-		        throw new AppException(400,"Email đã tồn tại");
+		        throw new AppException(400,"Email already exists");
 		    }
 		User user = new User();
 		user.setName(userRequest.getName());
@@ -72,7 +72,7 @@ public class UserService {
 		return new UserResponse(user.getId(),user.getName(),user.getEmail());
 	}
 	@Transactional
-	public UserResponse userUpdate( UserRequest userRequest) {
+	public UserResponse userUpdate( UserRequestForAdmin userRequest) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
@@ -83,7 +83,7 @@ public class UserService {
 
 		User user = userRepository.findById(userRequest.getId()).orElseThrow(()-> new AppException(404,"User not found"));
 		if(!isAdmin &&user.getId()!=userUpdate.getId()) {
-			throw new AppException(403,"USER_NOT_PERMISSION");
+			throw new AppException(403,"User not permission");
 		}
 		user.setName(userRequest.getName());
 		user.setEmail(userRequest.getEmail());
@@ -98,7 +98,7 @@ public class UserService {
 	        .anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
 
 	    if (!isAdmin) {
-	        throw new AppException(403,"USER_NOT_PERMISSION");
+	        throw new AppException(403,"User not permission");
 	    }
 		
 		User user = userRepository.findById(userRequestForAdmin.getId()).orElseThrow(()-> new AppException(404,"User not found"));
@@ -122,7 +122,7 @@ public class UserService {
 
 		User user = userRepository.findById(passwordRequest.getId()).orElseThrow(()-> new AppException(404,"User not found"));
 		 if(!isAdmin && userSetPassWord.getId()!=user.getId()) {
-	        	throw new AppException(403,"USER_NOT_PERMISSION");
+	        	throw new AppException(403,"User not permission");
 	        }
 		 if (!passwordEncoder.matches(passwordRequest.getOldpassword(), user.getPassword())) {
 	            throw new AppException(400,"Wrong password");
@@ -136,7 +136,7 @@ public class UserService {
 		 user=userRepository.save(user);
 		 Map<String, Object> response = new HashMap<>();
 		 response.put("status", 200);
-		 response.put("message", "Đổi mật khẩu thành công");
+		 response.put("message", "Password changed successfully");
 		 return response;
 	}
 	
@@ -156,7 +156,7 @@ public class UserService {
 			}
 			userRepository.deleteById(id);
 		}else {
-			throw new AppException(403,"USER_NOT_PERMISSION");
+			throw new AppException(403,"User not permission");
 		}
 	}
 }

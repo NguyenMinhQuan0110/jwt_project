@@ -104,7 +104,7 @@ public class AuthController {
 
         userRepository.save(user);
 
-        return new LogoutResponse("Đăng xuất thành công");
+        return new LogoutResponse("Logout successfully");
     }
 
 }
