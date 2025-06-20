@@ -42,4 +42,6 @@ public class User {
 	 
 	 private Integer loginfail;
 	 
+	 private Date blockExpiry;
+	 
 }

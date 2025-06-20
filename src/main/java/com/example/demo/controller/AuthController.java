@@ -52,18 +52,34 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login( @RequestBody UserRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(404,"Email not found"));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(404,"Email not found"));
+        Date now = new Date();
+        if (user.getBlock()==true && user.getBlockExpiry() != null && user.getBlockExpiry().after(now)) {
+            throw new AppException(400, "Your account is blocked until: " + user.getBlockExpiry());
+        }
+
+        if (user.getBlock()==true && user.getBlockExpiry() != null && user.getBlockExpiry().before(now)) {
+            user.setBlock(false);
+            user.setBlockExpiry(null);
+            user.setReason(null);
+            user.setLoginfail(0);
+            userRepository.save(user);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-        	user.setLoginfail(user.getLoginfail()+1);
-        	userRepository.save(user);
-            throw new AppException(400,"Wrong password");
-        }
-        if(user.getBlock()==true) {
-        	throw new AppException(400,"Your account has been blocked, reason: "+ user.getReason());
-        }
-        if(user.getLoginfail()>5) {
-        	throw new AppException(400,"Your account has been locked, reason: Login wrong more than 5 times");
+            if (user.getBlock()!=true) {
+                user.setLoginfail(user.getLoginfail() + 1);
+
+                if (user.getLoginfail() >= 5) {
+                    user.setBlock(true);
+                    user.setBlockExpiry(new Date(System.currentTimeMillis() + 5 * 60 * 1000)); // 5 phút
+                    user.setReason("Too many failed login attempts");
+                }
+
+                userRepository.save(user);
+            }
+
+            throw new AppException(400, "Wrong password");
         }
         String token = jwtUtil.generateToken(user);
         String refreshToken = UUID.randomUUID().toString();

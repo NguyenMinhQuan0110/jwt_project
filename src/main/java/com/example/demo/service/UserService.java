@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,9 +74,9 @@ public class UserService {
 		user.setLoginfail(0);
 		user= userRepository.save(user);
 		// Gửi email cho user
-	    String subject = "Your new password";
+	    String subject = "JWT";
 	    String text = "Hello " + user.getName() + ",\n\n"
-	                + "Your new password is: " + randomPassword + "\n\n"
+	                + "Your password is: " + randomPassword + "\n\n"
 	                + "Please log in and change it as soon as possible.";
 
 	    emailService.sendSimpleMessage(user.getEmail(), subject, text);
@@ -162,12 +163,16 @@ public class UserService {
 	
 	public Map<String, Object> forgetPassword(ForgetPasswordRequest request){
 		User userForgetPassword = userRepository.findByEmail(request.getEmail()).orElseThrow(()-> new AppException(404,"User not found"));
+		Date now = new Date();
+        if (userForgetPassword.getBlock()==true && userForgetPassword.getBlockExpiry() != null && userForgetPassword.getBlockExpiry().after(now)) {
+            throw new AppException(400, "Your account is blocked until: " + userForgetPassword.getBlockExpiry());
+        }
 		String randomPassword = UUID.randomUUID().toString().substring(0, 8);
 		userForgetPassword.setPassword(passwordEncoder.encode(randomPassword));
 		userForgetPassword.setLoginfail(0);
 		userForgetPassword= userRepository.save(userForgetPassword);
 		// Gửi email cho user
-	    String subject = "Your new password";
+	    String subject = "JWT";
 	    String text = "Hello " + userForgetPassword.getName() + ",\n\n"
 	                + "Your new password is: " + randomPassword + "\n\n"
 	                + "Please log in and change it as soon as possible.";
