@@ -13,19 +13,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dto.LockRequest;
 import com.example.demo.dto.PasswordRequest;
-import com.example.demo.dto.UserRequest;
+
 import com.example.demo.dto.UserRequestForAdmin;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.dto.UserResponseForAdmin;
 import com.example.demo.service.UserService;
 
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
 
 
 @RestController

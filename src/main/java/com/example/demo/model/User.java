@@ -44,4 +44,11 @@ public class User {
 	 
 	 private Date blockExpiry;
 	 
+	 private String createdBy;
+	 
+	 private Date createdTime;
+	 
+	 private String updateBy;
+	 
+	 private Date updateTime;
 }

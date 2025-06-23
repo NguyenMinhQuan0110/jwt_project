@@ -24,7 +24,9 @@ import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserResponse;
 import com.example.demo.exception.AppException;
+import com.example.demo.model.History;
 import com.example.demo.model.User;
+import com.example.demo.repository.HistoryRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
 import com.example.demo.service.UserService;
@@ -41,6 +43,7 @@ public class AuthController {
 	private long REFRESH_TOKEN_EXPIRATION;
 	private final UserService userService;
 	private final UserRepository userRepository;
+	private final HistoryRepository  historyRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
@@ -77,6 +80,14 @@ public class AuthController {
                     user.setBlock(true);
                     user.setBlockExpiry(new Date(System.currentTimeMillis() + 5 * 60 * 1000));
                     user.setReason("Too many failed login attempts");
+                    user.setUpdateBy("system");
+                    user.setUpdateTime(new Date(System.currentTimeMillis()));
+                  //Lưu lịch sử
+           		 	History history = new History();
+           		 	history.setImplementer("system");
+           		 	history.setAction("system locked account " + user.getName()+" for 5 min");
+           		 	history.setDateimp(new Date(System.currentTimeMillis()));
+           		 	history= historyRepository.save(history);
                 }
 
                 userRepository.save(user);
