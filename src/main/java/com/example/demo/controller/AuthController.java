@@ -55,7 +55,10 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AppException(404,"Email not found"));
         Date now = new Date();
         if (user.getBlock()==true && user.getBlockExpiry() != null && user.getBlockExpiry().after(now)) {
-            throw new AppException(400, "Your account is blocked until: " + user.getBlockExpiry());
+            throw new AppException(400, "Your account is locked until: " + user.getBlockExpiry());
+        }
+        if (user.getBlock()==true && user.getBlockExpiry() == null) {
+            throw new AppException(400, "Your account is locked, reason: " + user.getReason());
         }
 
         if (user.getBlock()==true && user.getBlockExpiry() != null && user.getBlockExpiry().before(now)) {
@@ -72,14 +75,14 @@ public class AuthController {
 
                 if (user.getLoginfail() >= 5) {
                     user.setBlock(true);
-                    user.setBlockExpiry(new Date(System.currentTimeMillis() + 5 * 60 * 1000)); // 5 phút
+                    user.setBlockExpiry(new Date(System.currentTimeMillis() + 5 * 60 * 1000));
                     user.setReason("Too many failed login attempts");
                 }
 
                 userRepository.save(user);
             }
 
-            throw new AppException(400, "Wrong password");
+            throw new AppException(400, "Wrong password.If you enter the wrong password more than 5 times, your account will be locked for 5 minutes.You have "+(5-user.getLoginfail()+1) +" attempts left.");
         }
         String token = jwtUtil.generateToken(user);
         String refreshToken = UUID.randomUUID().toString();

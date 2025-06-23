@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.ForgetPasswordRequest;
+import com.example.demo.dto.LockRequest;
 import com.example.demo.dto.PasswordRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.dto.UserRequestForAdmin;
@@ -125,8 +126,6 @@ public class UserService {
 		user.setEmail(userRequestForAdmin.getEmail());
 		Role roleId = roleRepository.findByName(userRequestForAdmin.getRole()).orElseThrow(() -> new AppException(404,"Role 'user' not found"));
 		user.setRole(roleId);
-		user.setBlock(userRequestForAdmin.getBlock());
-		user.setReason(userRequestForAdmin.getReason());
 		user.setPassword(passwordEncoder.encode(userRequestForAdmin.getPassword()));
 		
 		user = userRepository.save(user);
@@ -160,7 +159,7 @@ public class UserService {
 		 response.put("message", "Password changed successfully");
 		 return response;
 	}
-	
+	@Transactional
 	public Map<String, Object> forgetPassword(ForgetPasswordRequest request){
 		User userForgetPassword = userRepository.findByEmail(request.getEmail()).orElseThrow(()-> new AppException(404,"User not found"));
 		Date now = new Date();
@@ -183,7 +182,48 @@ public class UserService {
 		response.put("message", "Password changed successfully. Please check your email!");
 		return response;
 	}
-	
+	@Transactional
+	public Map<String, Object> lockUser(LockRequest lockRequest){
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+	    boolean isAdmin = auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
+        String email = auth.getName();
+
+        User userLock = userRepository.findByEmail(email).orElseThrow(() -> new AppException(404,"User not found"));
+
+		User user = userRepository.findById(lockRequest.getId()).orElseThrow(()-> new AppException(404,"User not found"));
+		if(!isAdmin || userLock.getId()==user.getId()) {
+			throw new AppException(403,"User not permission");
+		}
+		user.setBlock(true);
+		user.setReason(lockRequest.getReason());
+		user= userRepository.save(user);
+		Map<String, Object> response = new HashMap<>();
+		response.put("status", 200);
+		response.put("message", "Locked account "+ user.getName() +" successfully.");
+		return response;
+	}
+	@Transactional
+	public Map<String, Object> unLockUser(Long id){
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+	    boolean isAdmin = auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_admin"));
+        String email = auth.getName();
+
+        User userLock = userRepository.findByEmail(email).orElseThrow(() -> new AppException(404,"User not found"));
+
+		User user = userRepository.findById(id).orElseThrow(()-> new AppException(404,"User not found"));
+		if(!isAdmin || userLock.getId()==user.getId()) {
+			throw new AppException(403,"User not permission");
+		}
+		user.setBlock(false);
+		user.setReason(null);
+		user= userRepository.save(user);
+		Map<String, Object> response = new HashMap<>();
+		response.put("status", 200);
+		response.put("message", "Unlocked account "+ user.getName() +" successfully.");
+		return response;
+	}
 	@Transactional
 	public void deleteUser(Long id) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();

@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.dto.LockRequest;
 import com.example.demo.dto.PasswordRequest;
 import com.example.demo.dto.UserRequest;
 import com.example.demo.dto.UserRequestForAdmin;
@@ -23,6 +25,7 @@ import com.example.demo.dto.UserResponseForAdmin;
 import com.example.demo.service.UserService;
 
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 
 
 @RestController
@@ -59,6 +62,17 @@ public class UserController {
     @PutMapping("/setpassword")
     public ResponseEntity<Map<String, Object>> setPassword(@Valid @RequestBody PasswordRequest passwordRequest) {
         Map<String, Object> result = userService.setPasswordForUser(passwordRequest);
+        return ResponseEntity.ok(result);
+    }
+    
+    @PutMapping("/lockuser")
+    public ResponseEntity<Map<String, Object>> lockUser(@Valid @RequestBody LockRequest lockRequest) {
+        Map<String, Object> result = userService.lockUser(lockRequest);
+        return ResponseEntity.ok(result);
+    }
+    @PutMapping("/unlockuser/{id}")
+    public ResponseEntity<Map<String, Object>> unLockUser(@PathVariable Long id) {
+        Map<String, Object> result = userService.unLockUser(id);
         return ResponseEntity.ok(result);
     }
     @DeleteMapping("/delete/{id}")
